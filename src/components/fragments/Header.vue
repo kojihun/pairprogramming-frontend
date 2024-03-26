@@ -29,10 +29,18 @@
   <el-dialog v-model="loginFormVisible" title="Login form" width="600" align-center>
     <el-form :model="loginForm">
       <el-form-item label="Email" :label-width="loginFormLabelWidth">
-        <el-input v-model="loginForm.email" autocomplete="off" placeholder="Please input your email" />
+        <el-input 
+          v-model="loginForm.email" 
+          placeholder="Please input your email" 
+        />
       </el-form-item>
       <el-form-item label="Password" :label-width="loginFormLabelWidth">
-        <el-input v-model="loginForm.password" autocomplete="off" placeholder="Please input your password" />
+        <el-input 
+          v-model="loginForm.password" 
+          type="password" 
+          :show-password=true 
+          placeholder="Please input your password" 
+        />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -57,7 +65,7 @@
           @focusout="handleValidatePasswordField()" 
           v-model="signupForm.password" 
           type="password" 
-          show-password="true" 
+          :show-password=true 
           placeholder="Please input your password" 
         />
       </el-form-item>
@@ -66,7 +74,7 @@
           @focusout="handleValidatePasswordField()" 
           v-model="signupForm.passwordCheck" 
           type="password" 
-          show-password="true" 
+          :show-password=true
           placeholder="Please input your password again" 
         />
       </el-form-item>
@@ -97,7 +105,9 @@ import { reactive, ref } from 'vue'
 // Variables - Search
 const searchInput = ref('')
 
-// Variables - Login
+/**
+ * 로그인시 필요한 변수
+ */
 const loginFormVisible = ref(false)
 const loginFormLabelWidth = ref('140px')
 const loginForm = reactive({
@@ -105,53 +115,62 @@ const loginForm = reactive({
   password: ''
 })
 
-
-
-// Methods
-const handleMyPage = () => {
-  console.log("Hello new world");
-}
-
-// Methods - Login
+/**
+ * 로그인폼을 열기 위한 함수
+ */
 const handleShowLoginForm = () => {
   loginFormVisible.value = true
   signupFormVisible.value = false
   loginForm.email = ''
   loginForm.password = ''
 }
-const handleLogin = async () => {
-  const isValidField = handleValidateLoginField()
-  if(isValidField) {
-    try {
-      const response = await axios.post('/api/signin', {
-        email: loginForm.email,
-        password: loginForm.password
-      })
 
-      console.log(response)
-    } catch (e) {
-      console.error(e)
-    }
-  }
+/**
+ * 로그인폼을 닫기 위한 함수
+ */
+const handleCloseLoginForm = () => {
+  loginFormVisible.value = false
 }
-const handleValidateLoginField = () => {
+
+/**
+ * 로그인 함수
+ */
+const handleLogin = async () => {
   const email = loginForm.email
   const password = loginForm.password
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  const isEmailValid = emailRegex.test(email);
-
-  if(!isEmailValid) {
-    console.log("Invalid email format")
-    return false
+  // 이메일 확인
+  if(email == null || email.trim() === '') {
+    errorNotification('이메일을 입력해주세요.')
+    return
+  }
+  // 비밀번호 확인
+  if(password == null || password.trim() === '') {
+    errorNotification('비밀번호를 입력해주세요.')
+    return
   }
 
-  if(password.length < 8) {
-    console.log("Password must be 8 characters long")
-    return false
+  // 로그인
+  try {
+    const response = await axios.post('/api/members/signin', {
+      email: loginForm.email,
+      password: loginForm.password
+    })
+    
+    const data = response.data;
+    if(data.status == 'SUCCESS') {
+      const loginedMessage = data.data.name + '님 환영합니다.'
+      successNotification(loginedMessage)
+      handleCloseLoginForm()
+      return
+    }else {
+      errorNotification(data.message)
+      return
+    }
+  }catch (error) {
+    errorNotification(error.message)
+    return
   }
-
-  return true
 }
 
 /**
