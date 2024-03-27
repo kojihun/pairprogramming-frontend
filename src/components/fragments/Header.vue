@@ -4,6 +4,7 @@
     <!-- logo -->
     <el-menu-item >
       <img style="width: 130px" src="../../assets/element-plus-logo.svg" alt="Element logo"/>
+      <el-button @click="test()">Sign Up</el-button>
     </el-menu-item>
 
     <!-- divider -->
@@ -16,7 +17,7 @@
         <el-avatar :icon="UserFilled"></el-avatar>
       </span>
       <template #dropdown>
-        <el-dropdown-menu>
+        <el-dropdown-menu v-if="!loginedMember.isLogined">
           <el-dropdown-item @click="handleShowLoginForm()">Sign In</el-dropdown-item>
           <el-dropdown-item @click="handleShowSignupForm()">Sign Up</el-dropdown-item>
         </el-dropdown-menu>
@@ -101,6 +102,7 @@ import { ElNotification } from 'element-plus'
 
 // Import - Variables
 import { reactive, ref } from 'vue'
+import { onMounted } from 'vue'
 
 // Variables - Search
 const searchInput = ref('')
@@ -113,6 +115,11 @@ const loginFormLabelWidth = ref('140px')
 const loginForm = reactive({
   email: '',
   password: ''
+})
+const loginedMember = reactive({
+  email: '',
+  name: '',
+  isLogined: false
 })
 
 /**
@@ -162,6 +169,11 @@ const handleLogin = async () => {
       const loginedMessage = data.data.name + '님 환영합니다.'
       successNotification(loginedMessage)
       handleCloseLoginForm()
+
+      loginedMember.email = data.data.email
+      loginedMember.name = data.data.name
+      loginedMember.isLogined = true
+      localStorage.setItem('accessToken', data.data.accessToken)
       return
     }else {
       errorNotification(data.message)
@@ -323,6 +335,45 @@ const handleSignUp = async () => {
   }catch (error) {
     errorNotification(error.message)
     return
+  }
+}
+
+/**
+ * 컴포넌트 마운트시 유효 토큰인지 확인
+ */
+onMounted(async () => {
+  const accessToken = localStorage.getItem('accessToken');
+  if (accessToken) {
+    const isValid = await checkTokenValidity(accessToken);
+    if (isValid) {
+      loginedMember.isLogined = true
+    } else {
+      localStorage.removeItem('accessToken');
+      loginedMember.isLogined = false
+    }
+  }
+});
+
+/**
+ * 토큰 유효여부 확인 함수
+ */
+const checkTokenValidity = async () => {
+  try {
+    const response = await axios.get('/api/members/token', {
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem("accessToken")
+        }
+      }
+    )
+
+    const data = response.data;
+    if(data.status == 'SUCCESS') {
+      return true
+    }else {
+      return false
+    } 
+  } catch (error) {
+    return false
   }
 }
 
