@@ -2,9 +2,8 @@
   <!-- menu -->
   <el-menu mode="horizontal" :ellipsis="false">
     <!-- logo -->
-    <el-menu-item >
+    <el-menu-item @click="handleMoveMain()">
       <img style="width: 130px" src="../../assets/element-plus-logo.svg" alt="Element logo"/>
-      <el-button @click="test()">Sign Up</el-button>
     </el-menu-item>
 
     <!-- divider -->
@@ -93,18 +92,22 @@
 </template>
 
 <script lang="ts" setup>
-// Import - Axios
+// Axios 라이브러리 임포트
 import axios from 'axios'
 
-// Import - element-plus
+// element-plus 관련 라이브러리 임포트
 import { UserFilled, GoodsFilled } from '@element-plus/icons-vue'
 import { ElNotification } from 'element-plus'
 
-// Import - Variables
+// Vue 관련 라이브러리 임포트
 import { reactive, ref } from 'vue'
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
-// Variables - Search
+// 라우터 관련 변수
+const router = useRouter()
+
+// 검색 관련 변수
 const searchInput = ref('')
 
 /**
@@ -399,6 +402,13 @@ const errorNotification = (message: string) => {
     message: message,
     type: 'error',
   })
+}
+
+/**
+ * 메인 페이지로 이동하는 함수
+ */
+const handleMoveMain = () => {
+  router.push({ name: 'main' })
 }
 </script>
 

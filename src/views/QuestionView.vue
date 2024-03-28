@@ -57,10 +57,40 @@
       </el-container>
     </div>
     <div class="question-footer">
+      <!-- temp -->
+      <el-button size="large" type="success" @click="handleChat()">Chat</el-button>
+      <!-- //temp -->
+
       <el-button size="large" type="info">Save</el-button>
       <el-button size="large" type="info">Pull</el-button>
       <el-button size="large" type="info">Clean</el-button>
       <el-button size="large" type="primary">Run</el-button>
+    </div>
+    <div>
+      <el-drawer v-model="table" title="I have a nested table inside!" direction="rtl" size="40%">
+        <el-container>
+            <el-main>
+              <div id="chat-messages" class="chat-messages">
+                  <!-- 채팅 메시지가 여기에 추가됩니다. -->
+                  <div v-for="(message, index) in messages" :key="index" class="message-wrapper" :class="{ 'sent-message': message.sender === 'user' }">
+                      <div class="message">{{ message.text }}</div>
+                  </div>
+              </div>
+              <div class="fixed-input" >
+
+              <el-row>
+                  <el-col :span="20">
+                      <el-input v-model="newMessage" placeholder="메시지 입력"></el-input>
+                  </el-col>
+                  <el-col :span="4">
+                      <el-button @click="sendMessage">전송</el-button>
+                  </el-col>
+              </el-row>
+              </div>
+
+            </el-main>
+        </el-container>
+      </el-drawer>
     </div>
   </div>
 </template>
@@ -79,11 +109,28 @@ export default {  
     QHeader,
     CodeEditor
   },
+  mounted() {
+    // $route.params.id를 통해 id 값을 가져옴
+    const id = this.$route.params.id;
+    // 이제 id를 사용하여 원하는 작업을 수행할 수 있음
+    console.log("이동한 페이지의 id 값:", id);
+  },
   data() {
     return {
       c1: '# please start code',
       c2: 'waiting complie code..',
-      demo: ''
+      demo: '',
+      table: false,
+      messages: [
+                        { text: "안녕하세요!", sender: "bot" },
+                        { text: "어떻게 지내세요?", sender: "bot" },
+                        { text: "저도 잘 지내요!", sender: "user" },
+                        { text: "오랜만에 만나서 반가워요!", sender: "user" },
+                        { text: "안녕하세요!", sender: "bot" },
+                        { text: "어떻게 지내세요?", sender: "bot" },
+                        { text: "저도 잘 지내요!", sender: "user" },
+                        { text: "오랜만에 만나서 반가워요!", sender: "user" }
+                    ],
     }
   },
   methods: {
@@ -99,6 +146,10 @@ export default {  
             console.log("failed post http://localhost:8080/");
             console.log(error);
         })
+    },
+    handleChat() {
+      this.table = true;
+      console.log(this.table);
     }
   }
 }
@@ -162,4 +213,5 @@ export default {  
   color: #fff;
   padding: 7px 15px;
 }
+
 </style>
