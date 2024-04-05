@@ -20,7 +20,7 @@
         </div>
       </div>
       <div class="main-table">
-        <el-table @row-click="handleShowProblemDetail" :data="problemData.problems" :header-cell-style="{ background: '#c6e2ff', color: '#FAFCFF' }" border size="large" style="max-width: 800px; min-width: 800px;">
+        <el-table @row-click="handleShowProblemDetail" :data="problemData.problems" :header-cell-style="{ background: '#c6e2ff', color: '#FAFCFF', cursor: 'default' }" border size="large" style="max-width: 800px; min-width: 800px; cursor: pointer">
           <el-table-column prop="problemId" label="No" width="120" />
           <el-table-column prop="rank" label="Rank" width="120" :formatter="formatRank" />
           <el-table-column prop="title" label="Title" />
@@ -46,7 +46,6 @@ import axios from 'axios'
 // Vue 관련 라이브러리 임포트
 import { reactive, ref } from 'vue'
 import { onMounted } from 'vue'
-import { defineProps } from 'vue'
 import { useRouter } from 'vue-router'
 
 // 라우터 관련 변수

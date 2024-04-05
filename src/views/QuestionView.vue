@@ -1,54 +1,86 @@
 <template>
   <div class="question-container">
     <div class="question-header">
-      <QHeader></QHeader>
+
+    
+      <el-menu :default-active="menuData.activeIndex" mode="horizontal" :ellipsis="false" @select="handleSelect">
+        <el-menu-item index='1'>{{ problemData.title }}</el-menu-item>
+        <el-menu-item index='2'>Submission history</el-menu-item>
+      </el-menu>
+    
+    
     </div>
     <div class="question-body">
       <el-container>
-        <el-aside class="question-body-aside" width="500px">
+
+
+        <el-aside class="question-body-aside" width="500px" v-if="menuData.activeIndex == '1'">
           <el-scrollbar>
             <div class="question-body-problem-description">
               <div class="question-body-problem-description-title">Problem Description</div>
-              <div class="question-body-problem-description-content">The string my_string is given as a parameter. Complete the solution function to return a string that reverses my_string.</div>
+              <div class="question-body-problem-description-content">
+                {{ problemData.description }}
+              </div>
             </div>
             <div class="question-body-restrictions">
               <div class="question-body-restrictions-title">Restrictions</div>
-              <div class="question-body-restrictions-content">1 ≤ length of my_string ≤ 1,000</div>
+              <div class="question-body-restrictions-content">
+                {{ problemData.restriction }}
+              </div>
             </div>
             <div class="question-body-input-output-example">
               <div class="question-body-input-output-example-title">Input/Output Example</div>
               <div class="question-body-input-output-example-content">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>price</th>
-                      <th>result</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>150,000</td>
-                      <td>142,500</td>
-                    </tr>
-                    <tr>
-                      <td>580,000</td>
-                      <td>464,000</td>
-                    </tr>
-                  </tbody>
-                </table>
+                {{ problemData.inputOutputExample }}
               </div>
             </div>
           </el-scrollbar>
         </el-aside>
+
+
+        <el-aside class="question-body-aside" width="500px" v-if="menuData.activeIndex == '2'">
+          <el-scrollbar>
+            <div class="question-body-problem-description">
+              <div style="display: flex; justify-content: right; align-items: center; margin-bottom: 10px; ">
+                <el-icon color="#3977b8"  @click="handleRefresh()" style="cursor: pointer"><Refresh /></el-icon>
+              </div>
+              <el-table empty-text="No submission history found" @row-click="handleShowCode" :data="problemAnswerHistoryData" :header-cell-style="{ background: '#c6e2ff', color: '#FAFCFF', cursor: 'default' }" border style="cursor: pointer;" >
+                <el-table-column prop="" label="Submit Date" width="120" />
+                <el-table-column prop="language" label="Language" width="120" />
+                <el-table-column prop="status" label="Success status" />
+              </el-table>
+            </div>
+          </el-scrollbar>
+        </el-aside>
+
+
         <el-container>
           <el-main class="question-body-main">
             <el-scrollbar>
               <div>
                 <div class="question-editor-main">
-                  <CodeEditor theme="intellij-light" width="100%" height="340px" line-nums="true" :autofocus="true" border-radius="0px" :languages="[['python', 'Python'],['java', 'Java']]" v-model="demo"></CodeEditor>
+                  <CodeEditor
+                    theme="intellij-light"
+                    width="100%"
+                    height="340px"
+                    :line-nums="true"
+                    :autofocus="true"
+                    border-radius="0px"
+                    :languages="[['python', 'Python'], ['java', 'Java']]"
+                    v-model="problemAnswerData.standardFormat"
+                    @lang="handleGetStandardFormat"
+                  />
                 </div>
                 <div class="question-editor-answer">
-                  <CodeEditor theme="intellij-light" width= "100%" height="190px" :read-only="true" border-radius="0px" :languages="[['bash', 'Result']]"></CodeEditor>
+                  <CodeEditor 
+                    theme="intellij-light" 
+                    width= "100%" 
+                    height="190px" 
+                    :read-only="true" 
+                    border-radius="0px" 
+                    :languages="[['bash', 'Result']]"
+                    v-model="problemAnswerData.compileAnswer"
+                  />
                 </div>
               </div>
             </el-scrollbar>
@@ -63,9 +95,12 @@
 
       <el-button size="large" type="info">Save</el-button>
       <el-button size="large" type="info">Pull</el-button>
-      <el-button size="large" type="info">Clean</el-button>
-      <el-button size="large" type="primary">Run</el-button>
+      <el-button size="large" type="info" @click="handleClean()">Clean</el-button>
+      <el-button size="large" type="primary" @click="handleCompile()">Run</el-button>
     </div>
+
+
+
     <div>
       <el-drawer v-model="table" title="I have a nested table inside!" direction="rtl" size="40%">
         <el-container>
@@ -77,79 +112,176 @@
                   </div>
               </div>
               <div class="fixed-input" >
-
-              <el-row>
-                  <el-col :span="20">
-                      <el-input v-model="newMessage" placeholder="메시지 입력"></el-input>
-                  </el-col>
-                  <el-col :span="4">
-                      <el-button @click="sendMessage">전송</el-button>
-                  </el-col>
-              </el-row>
+                <el-row>
+                    <el-col :span="20">
+                        <el-input v-model="newMessage" placeholder="메시지 입력"></el-input>
+                    </el-col>
+                    <el-col :span="4">
+                        <el-button @click="sendMessage">전송</el-button>
+                    </el-col>
+                </el-row>
               </div>
-
             </el-main>
         </el-container>
       </el-drawer>
     </div>
+        
+    <el-dialog v-model="codeFormVisible" title="Code History" width="600" align-center>
+      <CodeEditor 
+        theme="intellij-light" 
+        width= "100%" 
+        height="400px" 
+        :read-only="true" 
+        border-radius="0px" 
+        :languages="[['bash', 'Result']]"
+        v-model="copyCode"
+        style="border: 1px solid #dcdfe6"
+      />
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
-// Import - File
-import QHeader from '../components/fragments/question/Header.vue'
-
-// Import - Module
-import hljs from 'highlight.js';
-import CodeEditor from 'simple-code-editor';
-import axios from 'axios';
+// 모듈 임포트
+import hljs from 'highlight.js'
+import CodeEditor from 'simple-code-editor'
+import axios from 'axios'
 
 export default {  
   components: {
-    QHeader,
     CodeEditor
-  },
-  mounted() {
-    // $route.params.id를 통해 id 값을 가져옴
-    const id = this.$route.params.id;
-    // 이제 id를 사용하여 원하는 작업을 수행할 수 있음
-    console.log("이동한 페이지의 id 값:", id);
   },
   data() {
     return {
-      c1: '# please start code',
-      c2: 'waiting complie code..',
-      demo: '',
-      table: false,
-      messages: [
-                        { text: "안녕하세요!", sender: "bot" },
-                        { text: "어떻게 지내세요?", sender: "bot" },
-                        { text: "저도 잘 지내요!", sender: "user" },
-                        { text: "오랜만에 만나서 반가워요!", sender: "user" },
-                        { text: "안녕하세요!", sender: "bot" },
-                        { text: "어떻게 지내세요?", sender: "bot" },
-                        { text: "저도 잘 지내요!", sender: "user" },
-                        { text: "오랜만에 만나서 반가워요!", sender: "user" }
-                    ],
+      menuData: {
+        activeIndex: '1'
+      },
+      problemData: {
+        problemId: '',
+        title: '',
+        rank: '',
+        restriction: '',
+        description: '',
+        inputOutputExample: ''
+      },
+      problemAnswerData: {
+        languageType: '',
+        standardFormat: '',
+        savedFormat: '',
+        compileAnswer: ''
+      },
+      problemAnswerHistoryData: [],
+      codeFormVisible: false,
+      copyCode: '',
+      table: false
     }
   },
+  mounted() {
+    this.handleLoadProblemDetail(this.$route.params.id)
+  },
   methods: {
-    resultBtn() {
-      axios.get('http://localhost:8080/api', {
-        params :{
-            code : encodeURI(this.c1)
-            }
-        }).then((response)=>{
-            console.log(response.data);
-            this.c2 =  response.data;
-        }).catch((error)=>{
-            console.log("failed post http://localhost:8080/");
-            console.log(error);
+    async handleLoadProblemDetail(problemId) {
+      try {
+        const response = await axios.get('/api/problems/detail', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+          },
+          params: {
+            problemId: problemId
+          }
         })
+
+        const data = response.data.data
+        Object.assign(this.problemData, {
+          problemId: data.problemId,
+          title: data.title,
+          rank: data.rank,
+          restriction: data.restriction,
+          description: data.description,
+          inputOutputExample: data.inputOutputExample
+        })
+      } catch (error) {
+        console.error("문제 세부 정보를 가져오는 중 오류 발생:", error)
+      }
     },
-    handleChat() {
-      this.table = true;
-      console.log(this.table);
+    async handleGetStandardFormat(language) {
+      try {
+        const response = await axios.get('/api/problems/format', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+          },
+          params: {
+            problemId: this.$route.params.id,
+            languageType: language
+          }
+        })
+
+        const data = response.data.data
+        Object.assign(this.problemAnswerData, {
+          languageType: data.languageType,
+          standardFormat: data.standardFormat
+        })
+      } catch (error) {
+        console.error("문제 세부 정보를 가져오는 중 오류 발생:", error)
+      }
+    },
+    async handleCompile() {
+      try {
+        const response = await axios.post('/api/problems/compile', {
+          code: this.problemAnswerData.standardFormat,
+          languageType: this.problemAnswerData.languageType
+        })
+
+        const data = response.data.data
+        this.problemAnswerData.compileAnswer = data.return
+        console.log(data)
+      } catch (error) {
+        console.error("문제 세부 정보를 가져오는 중 오류 발생:", error)
+      }
+    },
+    handleClean() {
+      this.$confirm(
+        'Your written code will be reset. Continue?',
+        'Reset code',
+        {
+          confirmButtonText: 'OK',
+          cancelButtonText: 'Cancel',
+          type: 'warning',
+        }
+      ).then(() => {
+        this.handleGetStandardFormat(this.problemAnswerData.languageType)
+      }).catch(() => {
+        
+      })
+    },
+    handleSelect(selectedIndex) {
+      this.menuData.activeIndex = selectedIndex
+    },
+    async handleRefresh() {
+      try {
+        console.log(this.problemData.problemId)
+        const response = await axios.get('/api/problems/answer', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+          },
+          params: {
+            problemId: this.problemData.problemId
+          }
+        });
+
+        this.problemAnswerHistoryData = response.data.data
+      } catch (error) {
+        console.error("문제 세부 정보를 가져오는 중 오류 발생:", error)
+      }
+    },
+    handleShowCode(row) {
+      this.copyCode = row.code
+      this.codeFormVisible = true
+    },
+    handleClose() {
+      this.copyCode = ''
+      this.codeFormVisible = false
     }
   }
 }
@@ -206,12 +338,4 @@ export default {  
   font-weight: bold;
   margin-bottom: 15px;
 }
-.question-body-input-output-example-content > table, th, td {
-  border: 1px solid #fff;
-  border-collapse: collapse;
-  background-color: #A8ABB2;
-  color: #fff;
-  padding: 7px 15px;
-}
-
 </style>

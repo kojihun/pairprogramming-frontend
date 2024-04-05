@@ -2,9 +2,9 @@
   <!-- menu -->
   <el-menu mode="horizontal" :ellipsis="false">
     <!-- logo -->
-    <el-menu-item @click="handleMoveMain()">
+    <div style="display:flex; justify-content: center; align-items: center; padding: 0px 10px; cursor: pointer;" @click="handleMoveMain">
       <img style="width: 130px" src="../../assets/element-plus-logo.svg" alt="Element logo"/>
-    </el-menu-item>
+    </div>
 
     <!-- divider -->
     <div class="flex-grow" />
@@ -19,6 +19,9 @@
         <el-dropdown-menu v-if="!loginedMember.isLogined">
           <el-dropdown-item @click="handleShowLoginForm()">Sign In</el-dropdown-item>
           <el-dropdown-item @click="handleShowSignupForm()">Sign Up</el-dropdown-item>
+        </el-dropdown-menu>
+        <el-dropdown-menu v-if="loginedMember.isLogined">
+          <el-dropdown-item @click="handleLogout()">Sign Out</el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>
@@ -183,9 +186,19 @@ const handleLogin = async () => {
       return
     }
   }catch (error) {
-    errorNotification(error.message)
+    errorNotification("ERROR: " + error)
     return
   }
+}
+
+/**
+ * 로그아웃 함수
+ */
+const handleLogout = async () => {
+  loginedMember.email = ''
+  loginedMember.name = ''
+  loginedMember.isLogined = false
+  localStorage.removeItem('accessToken')
 }
 
 /**
@@ -196,6 +209,7 @@ const signupFormLabelWidth = ref('140px')
 const signupForm = reactive({
   email: '',
   password: '',
+  passwordCheck: '',
   name: '',
   validateEmail: false,
   validatePassword: false
@@ -268,7 +282,7 @@ const handleValidateEmailField = async () => {
       return
     }
   }catch (error) {
-    errorNotification(error.message)
+    errorNotification("ERROR: " + error)
     signupForm.validateEmail = false
     return
   }
@@ -336,7 +350,7 @@ const handleSignUp = async () => {
       return
     }
   }catch (error) {
-    errorNotification(error.message)
+    errorNotification("ERROR: " + error)
     return
   }
 }
@@ -345,15 +359,12 @@ const handleSignUp = async () => {
  * 컴포넌트 마운트시 유효 토큰인지 확인
  */
 onMounted(async () => {
-  const accessToken = localStorage.getItem('accessToken');
-  if (accessToken) {
-    const isValid = await checkTokenValidity(accessToken);
-    if (isValid) {
-      loginedMember.isLogined = true
-    } else {
-      localStorage.removeItem('accessToken');
-      loginedMember.isLogined = false
-    }
+  const isValid = await checkTokenValidity();
+  if (isValid) {
+    loginedMember.isLogined = true
+  } else {
+    localStorage.removeItem('accessToken');
+    loginedMember.isLogined = false
   }
 });
 
@@ -364,7 +375,7 @@ const checkTokenValidity = async () => {
   try {
     const response = await axios.get('/api/members/token', {
         headers: {
-          'Authorization': 'Bearer ' + localStorage.getItem("accessToken")
+          'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
         }
       }
     )
