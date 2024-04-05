@@ -1,9 +1,9 @@
 <template>
-  <!-- menu -->
+  <!-- Menu -->
   <el-menu mode="horizontal" :ellipsis="false">
-    <!-- logo -->
-    <div style="display:flex; justify-content: center; align-items: center; padding: 0px 10px; cursor: pointer;" @click="handleMoveMain">
-      <img style="width: 130px" src="../../assets/element-plus-logo.svg" alt="Element logo"/>
+    <!-- Logo -->
+    <div class="logo-container" @click="handleMoveMain">
+      <img class="logo-image" src="../../assets/element-plus-logo.svg" alt="Element logo"/>
     </div>
 
     <!-- divider -->
@@ -424,28 +424,43 @@ const handleMoveMain = () => {
 </script>
 
 <style>
-/* divider */
+/* Logo */
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0px 10px;
+  cursor: pointer;
+}
+
+.logo-image {
+  width: 130px;
+}
+
+/* Divider */
 .flex-grow {
   flex-grow: 1;
 }
 
-/* avatar */
+/* Avatar */
 .avatar-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .avatar-container > * {
   margin: 0 5px;
 }
 
-/* form-email */
+/* Form Email */
 .email-input {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
 }
+
 .email-input > button {
   margin-left: 5px;
 }
