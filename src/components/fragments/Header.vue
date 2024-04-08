@@ -359,12 +359,13 @@ const handleSignUp = async () => {
  * 컴포넌트 마운트시 유효 토큰인지 확인
  */
 onMounted(async () => {
-  const isValid = await checkTokenValidity();
+  const isValid = await checkTokenValidity()
   if (isValid) {
     loginedMember.isLogined = true
   } else {
-    localStorage.removeItem('accessToken');
+    localStorage.removeItem('accessToken')
     loginedMember.isLogined = false
+    handleMoveMain()
   }
 });
 
